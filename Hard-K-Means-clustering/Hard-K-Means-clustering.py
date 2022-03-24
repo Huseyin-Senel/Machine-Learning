@@ -43,7 +43,7 @@ for lo in range(0,10):
     '''
     print("---------------------------------------------------------------------------------------------------")
     print("coordinates / distances / min distance / min distance position / row")
-    for i, d, min, b1, j in zip(x, dist, minInRows, b, np.arange(0, len(x))):
+    for i, d, min, b1, j in zip(x, dist, minInRows, b, np.arange(0, len(x))):           #Debug
         # print(i,d,min,b1,j)
         print(f'{i} / {d} / {min: .8f} / {b1} / {j}')'''
 
