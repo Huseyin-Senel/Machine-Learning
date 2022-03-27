@@ -4,7 +4,7 @@ import random
 
 
 
-"""Regression function"""
+"""Regression function"""   #Copilot
 def regression(x, y):
     """
     :param x: x-axis
@@ -24,14 +24,14 @@ def regression(x, y):
 
 
 
-x =  np.array(list(range(1, 100)))
+x =  np.array(list(range(1, 100)))    #Me :)
 y =  np.array(list(range(1, 100)))
 for i in range(len(x)):
     y[i]= x[i]+random.randint(0,50)
 
 
 
-"""plot regression line"""
+"""plot regression line"""    #Copilot
 slope, y_intercept = regression(x, y)
 x_line = np.linspace(0, 200, 200)
 y_line = slope * x_line + y_intercept
