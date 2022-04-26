@@ -11,13 +11,14 @@ class neuron:
 
 
     def __init__(self,*args):
-
-        if len(args) == 2 and isinstance(args[0],list):
-         #args[0] = weights args[1] = activation_function
+        
+        #args[0] = weights args[1] = ActivationFunctionName
+        if len(args) == 2 and isinstance(args[0],list):       
             self.Weights=args[0]
             self.af_obj=AF.ActivationFunction(args[1])                      #we Created af_obj in constructor
             self.af_name= self.af_obj.getActivationFunction()             #also created af_name in constructor
-         #args[0] = weightsCount args[1] = ActivationFunction()
+            
+        #args[0] = weightsCount args[1] = ActivationFunctionName
         elif len(args) == 2 and isinstance(args[0],int):
             self.Weights = [0]*args[0]                        #we created list which is from zeros
             self.createRandomWeights(args[0])
