@@ -74,8 +74,4 @@ class ActivationFunction:
             return self.sigmoidDerivative(value)
         elif (name == self.activation_names[2]):
             return self.tanhDerivative(value)
-
-
-c=ActivationFunction("ReLU")
-a = c.softmaxDerivative([0.25949646034242,0.70538451269824])
-print(a)
+       #ADD Softmax deritive
