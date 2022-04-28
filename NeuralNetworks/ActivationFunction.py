@@ -45,7 +45,7 @@ class ActivationFunction:
         e_x = np.exp(list - np.max(list))
         return e_x / e_x.sum(axis=0)  # only difference
 
-    def softmaxDerivative(self, list): # ???
+    def softmaxDerivative(self, list):
         Sz = self.softmax(list)
         D = -np.outer(Sz, Sz) + np.diag(Sz.flatten())
         return D.diagonal().tolist()    #return D
