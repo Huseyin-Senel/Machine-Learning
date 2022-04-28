@@ -23,6 +23,24 @@ class Layer:
             for i in range(args[0]):
                 self.neurons.append(NU.neuron(args[1][i]))
 
+
+    def runLayer(self,Debug=False):
+
+        RawOutputs = list()
+        self.outputs.clear()
+        for i in range(len(self.neurons)):
+            self.neurons[i].setInputs(self.inputs)
+            if Debug : print("------Running Neuron"+str(i+1)+"------")
+            self.neurons[i].runNeuron(Debug)
+            self.outputs.append(self.neurons[i].getOutput())
+            RawOutputs.append(self.neurons[i].getRawOutput())
+
+        if Debug :print("---------------Running Layer Activation Function-------------")
+        for idx,neuron in enumerate(self.neurons):
+            self.outputs[idx]=AF.ActivationFunction.runActivationFunctionLayer(neuron.getActivationName(),RawOutputs)[idx]
+        if Debug: print("Layer Outputs:",self.outputs)
+
+
     def setInputs(self,liste): #multiple change
         self.inputs=liste
 
@@ -60,18 +78,3 @@ class Layer:
     def getNeuron(self,index):
         return self.neurons[index]
 
-    def runLayer(self,Debug=False):
-
-        RawOutputs = list()
-        self.outputs.clear()
-        for i in range(len(self.neurons)):
-            self.neurons[i].setInputs(self.inputs)
-            if Debug : print("------Running Neuron"+str(i+1)+"------")
-            self.neurons[i].runNeuron(Debug)
-            self.outputs.append(self.neurons[i].getOutput())
-            RawOutputs.append(self.neurons[i].getRawOutput())
-
-        if Debug :print("---------------Running Layer Activation Function-------------")
-        for idx,neuron in enumerate(self.neurons):
-            self.outputs[idx]=AF.ActivationFunction.runActivationFunctionLayer(neuron.getActivationName(),RawOutputs)[idx]
-        if Debug: print("Layer Outputs:",self.outputs)

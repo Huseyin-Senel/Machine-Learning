@@ -1,14 +1,19 @@
 import neuron as NU
 import LayerClass as LC
+import ErrorFunctions as EF
 class Model:
 
 
-    def __init__(self,inputCount,outputCount,activationFunction):
+    def __init__(self,inputCount,outputCount,activationFunction,errorFunction):
         self.layers = list()
         self.inputs = list()
-
+        self.ExpectedOutputs = list()
         self.outputCount = outputCount
-        self.inputs=[0]*inputCount
+        self.inputCount = inputCount
+        self.ErrorFunction = errorFunction
+        self.Errors = list()
+        self.TotalError = 0
+
         self.insertHiddenLayer(self.createLayer(outputCount, activationFunction))
 
     def runModel(self,Debug=False):
@@ -19,6 +24,20 @@ class Model:
                 layer.setInputs(self.layers[idx-1].getOutputs())
             if Debug : print("\n-------------------------- Running Layer"+str(idx+1)+"----------------------------------------")
             layer.runLayer(Debug)
+        self.calculateErrors()
+        self.TotalError = sum(self.Errors) if not(self.Errors == None) else 0
+
+    def calculateErrors(self):
+        self.Errors=EF.ErrorFunctions.calculateErrors(self.ErrorFunction,self.ExpectedOutputs,self.layers[-1].getOutputs())
+
+    def fit(self,x_train,y_train,epochs,Debug=False):
+        self.setInputs(x_train)
+        self.setExpectedOutputs(y_train)
+        for epoch in range(epochs):
+            self.runModel(Debug)
+
+    def setExpectedOutputs(self,outputs):
+        self.ExpectedOutputs=outputs
 
     def setInputs(self,inputs):
         self.inputs=inputs
@@ -57,7 +76,7 @@ class Model:
 
     def getConnectionCount(self,layerIndex):
         if layerIndex==0:
-            return len(self.inputs)*self.layers[0].getNeuronCount()
+            return self.inputCount*self.layers[0].getNeuronCount()
         else:
             return self.layers[layerIndex-1].getNeuronCount()*self.layers[layerIndex].getNeuronCount()
 
@@ -73,9 +92,12 @@ class Model:
     def getLayer(self,index):
         return self.layers[index]
 
+    def getError(self):
+        return self.TotalError , self.Errors
+
     def getModelInfo(self):
         print("\n<-- Model Info: -->\n ")
-        print("Input Count: ",len(self.inputs))
+        print("Input Count: ",self.inputCount)
         print("Output Count: ",self.outputCount)
         print("Total Layers Count: ",len(self.layers))
         print("   Hidden Layers: ",len(self.layers)-1)
@@ -87,24 +109,3 @@ class Model:
         for i in range(len(self.layers)):
             print("   Layer"+str(i+1)+": "+str(self.getConnectionCount(i)))
         print("\n<-- End of Model Info -->\n")
-
-
-
-
-
-# deneme = Model(3136,10,"Softmax")
-# deneme.insertHiddenLayer(deneme.createLayer(128, "ReLU"))
-#
-# deneme.getOutputLayer().getNeuron(0).setWeights([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
-#
-# # layer = deneme.createLayer(10, ["ReLU","ReLU","ReLU","Softmax","Softmax","Softmax","ReLU","ReLU","ReLU","Ali"])
-# # deneme.changeOutputLayer(layer)
-#
-# deneme.getModelInfo()
-#
-# list=[0]*3136
-# deneme.setInputs(list)
-# #
-# deneme.runModel(Debug=True)
-# print("--------------------Outputs--------------------")
-# print(deneme.getOutputs())

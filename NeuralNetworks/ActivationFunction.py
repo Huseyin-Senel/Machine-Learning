@@ -48,7 +48,7 @@ class ActivationFunction:
     def softmaxDerivative(self, list): # ???
         Sz = self.softmax(list)
         D = -np.outer(Sz, Sz) + np.diag(Sz.flatten())
-        return D
+        return D.diagonal().tolist()    #return D
 
 
     def runActivationFunction(self, name, value):
@@ -67,7 +67,6 @@ class ActivationFunction:
             return values
 
 
-
     def runActivationFunctionDerivative(self, name, value):
         if (name == self.activation_names[0]):
             return self.reluDerivative(value)
@@ -76,3 +75,7 @@ class ActivationFunction:
         elif (name == self.activation_names[2]):
             return self.tanhDerivative(value)
 
+
+c=ActivationFunction("ReLU")
+a = c.softmaxDerivative([0.25949646034242,0.70538451269824])
+print(a)
