@@ -1,6 +1,9 @@
+import numpy as np
+from alive_progress import alive_bar
 import neuron as NU
 import LayerClass as LC
 import ErrorFunctions as EF
+import ActivationFunction as AF
 class Model:
 
 
@@ -16,25 +19,81 @@ class Model:
 
         self.insertHiddenLayer(self.createLayer(outputCount, activationFunction))
 
-    def runModel(self,Debug=False):
+    def runModel(self,learningRate,Debug=False):
         for idx,layer in enumerate(self.layers):
             if idx==0:
                 layer.setInputs(self.inputs)
             else:
                 layer.setInputs(self.layers[idx-1].getOutputs())
-            if Debug : print("\n-------------------------- Running Layer"+str(idx+1)+"----------------------------------------")
+            if (Debug): print("\n-------------------------- Running Layer"+str(idx+1)+"----------------------------------------")
             layer.runLayer(Debug)
         self.calculateErrors()
         self.TotalError = sum(self.Errors) if not(self.Errors == None) else 0
+        if (Debug):print("\n------------Outputs-------------")
+        if (Debug):print("Total Error:",self.TotalError)
+        self.runBackPropagation(learningRate)
+        # print ("Outputs:",(self.layers[-1].getOutputs()))
+        if (Debug):print (["%0.2f" % i for i in self.layers[-1].getOutputs()])
+        if (Debug):print("Expected Outputs:",self.ExpectedOutputs)
+
+    def runBackPropagation(self,learningRate):
+        for layer in reversed(self.layers):
+            layer.setNewWeights(np.zeros(layer.getWeights().shape))
+            layer.setNewBiases(np.zeros(layer.getBiases().shape))
+            if layer == self.layers[-1]:
+                for i, neuron in enumerate(self.layers[-1].getNeurons()):
+                    EF_Derivative = EF.ErrorFunctions.calculateDerivatives(self.ErrorFunction, self.ExpectedOutputs[i],neuron.getOutput())
+
+                    if neuron.getActivationType() =="AF":
+                        AF_Derivative = AF.ActivationFunction.runActivationFunctionDerivative(neuron.getActivationName(), neuron.getOutput())
+                    elif neuron.getActivationType() =="LAF":
+                        AF_Derivative = AF.ActivationFunction.runActivationFunctionDerivative(neuron.getActivationName(), neuron.getOutput(),layer.getOutputs())[i]
+
+                    neuron.setLocalDerivative(EF_Derivative * AF_Derivative)
+
+                    for idx,x in enumerate(layer.getInputs()):
+                        layer.changeNewWeight([i,idx],layer.getWeights()[i][idx] - learningRate * neuron.getLocalDerivative() * x)
+                    layer.changeNewBias(i,layer.getBiases()[i] - learningRate * neuron.getLocalDerivative())
+            else:
+                # self.layers[self.layers.index(layer) + 1].setWeights(self.layers[self.layers.index(layer) + 1].getNewWeights())
+                # self.layers[self.layers.index(layer) + 1].setBiases(self.layers[self.layers.index(layer) + 1].getNewBiases())
+                for i, neuron in enumerate(layer.getNeurons()):
+                    c = 0
+                    for j, neuronL in enumerate(self.layers[self.layers.index(layer) + 1].getNeurons()):
+                        c += neuronL.getLocalDerivative() * self.layers[self.layers.index(layer) + 1].getWeights()[j][i]
+
+                    AF_Derivative = AF.ActivationFunction.runActivationFunctionDerivative(neuron.getActivationName(), neuron.getOutput())
+                    neuron.setLocalDerivative(c * AF_Derivative)
+
+                    for idx, x in enumerate(layer.getInputs()):
+                        layer.changeNewWeight([i,idx],layer.getWeights()[i][idx] - learningRate * neuron.getLocalDerivative() * x)
+                    layer.changeNewBias(i,layer.getBiases()[i] - learningRate * neuron.getLocalDerivative())
+        # self.layers[0].setWeights(self.layers[0].getNewWeights())
+        # self.layers[0].setBiases(self.layers[0].getNewBiases())
+        for layer in self.layers:
+            layer.setWeights(layer.getNewWeights())
+            layer.setBiases(layer.getNewBiases())
+
+
+
 
     def calculateErrors(self):
         self.Errors=EF.ErrorFunctions.calculateErrors(self.ErrorFunction,self.ExpectedOutputs,self.layers[-1].getOutputs())
 
-    def fit(self,x_train,y_train,epochs,Debug=False):
-        self.setInputs(x_train)
-        self.setExpectedOutputs(y_train)
+    def fit(self,x_train,y_train,epochs,LearningRate,Debug=False):
         for epoch in range(epochs):
-            self.runModel(Debug)
+            with alive_bar(len(x_train),title="Epoch: "+str(epoch+1),force_tty=True) as bar:
+                error = 0
+                for i, x in enumerate(x_train):
+                    self.setInputs(x)
+                    self.setExpectedOutputs(y_train[i])
+                    self.runModel(LearningRate, Debug)
+                    error += self.getError()[0]
+                    bar()
+            print("Error: " + str(error / len(x_train)))
+
+
+
 
     def setExpectedOutputs(self,outputs):
         self.ExpectedOutputs=outputs
@@ -83,7 +142,7 @@ class Model:
     def totalConnectionCount(self):
         totalConnections=0
         for i in range(len(self.layers)):
-            totalConnections+=self.getConnectionCount(i)
+            totalConnections+=self.getConnectionCount(i)+self.layers[i].getNeuronCount()
         return totalConnections
 
     def getOutputLayer(self):
@@ -107,5 +166,5 @@ class Model:
             print("   Layer"+str(idx+1)+": "+str(layer.getNeuronCount()))
         print("Total number of connections",self.totalConnectionCount())
         for i in range(len(self.layers)):
-            print("   Layer"+str(i+1)+": "+str(self.getConnectionCount(i)))
+            print("   Layer"+str(i+1)+": "+str(self.getConnectionCount(i))+" + "+str(len(self.layers[i].getNeurons())))
         print("\n<-- End of Model Info -->\n")

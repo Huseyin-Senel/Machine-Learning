@@ -4,74 +4,79 @@ import numpy as np
 class ActivationFunction:
     activation_names = ["ReLU","Sigmoid","Tanh","Softmax"]
     layer_activation_names = ["Softmax"]
-    activation_function = None
 
-    def __init__(self,activation_name2):
-        self.activation_function = None                   #we created activation_function in constructor
-        if(activation_name2 in self.activation_names):   #we check if list include activasion names
-            self.activation_function = activation_name2
+
+    @staticmethod
+    def checkActivationFunction(name):
+        if(name in ActivationFunction.activation_names):
+            type = "AF"
+            if (name in ActivationFunction.layer_activation_names):
+                type = "LAF"
+            return name , type
         else:
-            print("please enter a valid Activation Function name, default value is selected as ReLU ("+str(activation_name2)+" --> ReLU)")
-            self.activation_function = "ReLU"
-
-    def getActivationFunction(self):
-        return self.activation_function
-
+            print("please enter a valid Activation Function name, default value is selected as ReLU (" + str(name) + " --> ReLU)")
+            return "ReLU","AF"
 
     ############################
-    def relu(self,value):
-        return max(0,value)
 
-    def reluDerivative(self, value):
+    @staticmethod
+    def relu(value):
+        return max(0,value)
+    @staticmethod
+    def reluDerivative(value):
         if value <= 0:
             return 0
         elif value>0:
             return 1
-    ############################
-    def sigmoid(self,value):
+
+
+    @staticmethod
+    def sigmoid(value):
         return 1/(1+math.e**(-value))
+    @staticmethod
+    def sigmoidDerivative(value):
+        return ActivationFunction.sigmoid(value)*(1-ActivationFunction.sigmoid(value))
 
-    def sigmoidDerivative(self, value):
-        return self.sigmoid(value)*(1-self.sigmoid(value))
 
-    ############################
-    def tanh(self,value):
+    @staticmethod
+    def tanh(value):
         return (math.e**(value)-math.e**(-value))/(math.e**(value)+math.e**(-value))
+    @staticmethod
     def tanhDerivative(value):
         return 4/((math.e**(value)+math.e**(-value))**2)
 
-    ############################
-    def softmax(self,list):
+
+    @staticmethod
+    def softmax(list):
         e_x = np.exp(list - np.max(list))
         return e_x / e_x.sum(axis=0)  # only difference
-
-    def softmaxDerivative(self, list):
-        Sz = self.softmax(list)
+    @staticmethod
+    def softmaxDerivative(list):
+        Sz = ActivationFunction.softmax(list)
         D = -np.outer(Sz, Sz) + np.diag(Sz.flatten())
         return D.diagonal().tolist()    #return D
 
-
-    def runActivationFunction(self, name, value):
-        if (name == self.activation_names[0]):
-            return self.relu(value)
-        elif (name == self.activation_names[1]):
-            return self.sigmoid(value)
-        elif (name == self.activation_names[2]):
-            return self.tanh(value)
+    ############################
 
     @staticmethod
-    def runActivationFunctionLayer(name,values):
-        if (name == ActivationFunction.layer_activation_names[0]):
-            return ActivationFunction.softmax(ActivationFunction,values)
-        else:
-            return values
+    def runActivationFunction(name, value,rawNeuronOutputs=None):
+        if (name == ActivationFunction.activation_names[0]):
+            return ActivationFunction.relu(value)
+        elif (name == ActivationFunction.activation_names[1]):
+            return ActivationFunction.sigmoid(value)
+        elif (name == ActivationFunction.activation_names[2]):
+            return ActivationFunction.tanh(value)
+        elif (name == ActivationFunction.activation_names[3]):
+            return ActivationFunction.softmax(rawNeuronOutputs)
 
 
-    def runActivationFunctionDerivative(self, name, value):
-        if (name == self.activation_names[0]):
-            return self.reluDerivative(value)
-        elif (name == self.activation_names[1]):
-            return self.sigmoidDerivative(value)
-        elif (name == self.activation_names[2]):
-            return self.tanhDerivative(value)
-       #ADD Softmax deritive
+    @staticmethod
+    def runActivationFunctionDerivative(name, value,list=None):
+        if (name == ActivationFunction.activation_names[0]):
+            return ActivationFunction.reluDerivative(value)
+        elif (name == ActivationFunction.activation_names[1]):
+            return ActivationFunction.sigmoidDerivative(value)
+        elif (name == ActivationFunction.activation_names[2]):
+            return ActivationFunction.tanhDerivative(value)
+        elif (name == ActivationFunction.activation_names[3]):
+            return ActivationFunction.softmaxDerivative(list)
