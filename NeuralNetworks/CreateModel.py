@@ -75,8 +75,6 @@ class Model:
             layer.setBiases(layer.getNewBiases())
 
 
-
-
     def calculateErrors(self):
         self.Errors=EF.ErrorFunctions.calculateErrors(self.ErrorFunction,self.ExpectedOutputs,self.layers[-1].getOutputs())
 
@@ -91,7 +89,6 @@ class Model:
                     error += self.getError()[0]
                     bar()
             print("Error: " + str(error / len(x_train)))
-
 
 
 
@@ -168,3 +165,11 @@ class Model:
         for i in range(len(self.layers)):
             print("   Layer"+str(i+1)+": "+str(self.getConnectionCount(i))+" + "+str(len(self.layers[i].getNeurons())))
         print("\n<-- End of Model Info -->\n")
+
+    def getModel(self):
+        weights = []
+        biases = []
+        for layer in self.layers:
+            weights.append(layer.getWeights())
+            biases.append(layer.getBiases())
+        return  weights,biases
