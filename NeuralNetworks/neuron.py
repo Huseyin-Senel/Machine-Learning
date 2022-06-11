@@ -4,13 +4,12 @@ class neuron:
 
     def __init__(self,*args):
         self.af_name = "ReLU"
-        self.af_type = "AF"
         self.rawOutput = 0  # the value which didnt enter activationFunction (pure output)
         self.output = 0  # this value entered activation function
         self.LocalDerivative = None
 
         if len(args) == 1 and isinstance(args[0],str):    # args[0] = activation_function
-            self.af_name,self.af_type = AF.ActivationFunction.checkActivationFunction(args[0])
+            self.af_name = AF.ActivationFunction.checkActivationFunction(args[0])
 
     def setOutput(self,value):
         self.output=value

@@ -10,11 +10,14 @@ class Layer:
 
         self.neurons = list() # K neuron
         self.inputs = list()  # N input
-        self.outputs = list()  # M output
-        self.weights = np.array([[],[]])  # N x K matrix
-        self.biases = list()  # M
-        self.newWeights = np.array([[],[]])  # N x K matrix
-        self.newBiases = list()  # M
+        self.rawOutputs = list() # K
+        self.outputs = list()  # K
+        self.weights = np.array([[],[]])  # K x N matrix  row x column
+        self.newWeights = np.array([[], []])  # K x N matrix
+        self.deltaWeights = np.array([[], []])  # K x N matrix
+        self.biases = list()  # K
+        self.newBiases = list()  # K
+        self.deltaBiases = list()  # K
 
         # args[0] =Neuron Count
         if len(args) == 1 and isinstance(args[0], int):
@@ -29,21 +32,27 @@ class Layer:
             for i in range(args[0]):
                 self.neurons.append(NU.neuron(args[1][i]))
 
-    # a = np.matmul([[1,2],[3,4],[5,6],[7,8]],(np.array([1,2]).T))+[1,2,3,4]
-    # print("fast calc:",a)
     def runLayer(self,Debug=False):
-        if not (len(self.inputs) == self.weights.shape[1] or (len(self.neurons) == self.weights.shape[0])):
+        if not(len(self.inputs) == self.weights.shape[1]) or not(len(self.neurons) == self.weights.shape[0]):
             if(Debug):print("\nError: Inputs and weights are not the same size")
             if(Debug):print("Generating random weights...")
-            self.createRandomWeights(len(self.inputs))
+            self.createRandomWeights()
             if(Debug):print("Weights generated:"+str(self.weights.shape))
         if not (len(self.neurons) == len(self.biases)):
             if(Debug):print("\nError: Neuron count and bias count are not the same size")
             if(Debug):print("Generating random bias...")
             self.createRandomBias()
             if(Debug):print("Biases generated:"+str(len(self.biases)))
+        if not (len(self.inputs)==self.deltaWeights.shape[1]) or not (len(self.neurons)==self.deltaWeights.shape[0]):
+            self.deltaWeights = np.zeros((len(self.neurons),len(self.inputs)))
+            print("bbbb")
+        if not (len(self.inputs)==len(self.deltaBiases)):
+            self.deltaBiases = np.zeros(len(self.neurons))
+            print("cccc")
 
-        RawOutputs = np.matmul(self.weights,(np.array(self.inputs).T))+self.biases
+
+
+        self.rawOutputs = (np.matmul(self.weights,((np.array(self.inputs)[np.newaxis]).T))+(np.array(self.biases)[np.newaxis]).T).flatten()
         self.outputs.clear()
         for i,neuron in enumerate(self.neurons):
             if (Debug):
@@ -51,20 +60,74 @@ class Layer:
                 print("Inputs:",self.inputs)
                 print("Weights:",self.weights[i])
                 print("Bias:", self.biases[i])
-            neuron.setRawOutput(RawOutputs[i])
-            if neuron.getActivationType() == "AF":
-                neuron.setOutput(AF.ActivationFunction.runActivationFunction(neuron.getActivationName(),RawOutputs[i]))
-            elif neuron.getActivationType() == "LAF":
-                neuron.setOutput(AF.ActivationFunction.runActivationFunction(neuron.getActivationName(), RawOutputs[i],RawOutputs)[i])
+
+            neuron.setRawOutput(self.rawOutputs[i])
+            neuron.setOutput(AF.ActivationFunction.runActivationFunction(neuron.getActivationName(),self.rawOutputs,i))
 
             if (Debug):
                 print("Raw Output:",neuron.getRawOutput())
                 print("Output:",neuron.getOutput())
+
             self.outputs.append(self.neurons[i].getOutput())
 
 
+
+    def changeWeight(self,indexs,weight):
+        self.weights[indexs[0]][indexs[1]] = weight
+
     def setWeights(self,weights):
         self.weights = weights
+
+    def getWeights(self):
+        return self.weights
+
+    def changeNewWeight(self,indexs,weight):
+        self.newWeights[indexs[0]][indexs[1]] = weight
+
+    def setNewWeights(self,newWeights):
+        self.newWeights = newWeights
+
+    def getNewWeights(self):
+        return self.newWeights
+
+    def changeDeltaWeight(self,indexs,deltaWeight):
+        self.deltaWeights[indexs[0]][indexs[1]] = deltaWeight
+
+    def setDeltaWeights(self,deltaWeights):
+        self.deltaWeights = deltaWeights
+
+    def getDeltaWeights(self):
+        return self.deltaWeights
+
+
+
+    def changeBias(self,index,bias):
+        self.biases[index] = bias
+
+    def getBiases(self):
+        return self.biases
+
+    def setBiases(self,biases):
+        self.biases = biases
+
+    def changeNewBias(self,index,bias):
+        self.newBiases[index] = bias
+
+    def setNewBiases(self,newBiases):
+        self.newBiases = newBiases
+
+    def getNewBiases(self):
+        return self.newBiases
+
+    def changeDeltaBias(self,index,deltaBias):
+        self.deltaBiases[index] = deltaBias
+
+    def setDeltaBiases(self,deltaBiases):
+        self.deltaBiases = deltaBiases
+
+    def getDeltaBiases(self):
+        return self.deltaBiases
+
 
 
     def setInputs(self,liste): #multiple change
@@ -72,6 +135,9 @@ class Layer:
 
     def getInputs(self):
         return self.inputs
+
+    def getRawOutputs(self):
+        return self.rawOutputs
 
     # args[0] =Neuron, args[1] = insert index
     def insertNeuron(self, *args):
@@ -92,6 +158,12 @@ class Layer:
     def getNeurons(self):
         return self.neurons
 
+    def getNeuron(self,index):
+        return self.neurons[index]
+
+    def getNeuronCount(self):
+        return len(self.neurons)
+
     def getOutputs(self):
         return self.outputs
 
@@ -101,45 +173,27 @@ class Layer:
             names.append(self.neurons[i].getActivationName())
         return names
 
-    def getNeuronCount(self):
-        return len(self.neurons)
-
-    def getNeuron(self,index):
-        return self.neurons[index]
-
-    def createRandomWeights(self,inputCount):
-        self.weights = np.random.rand(len(self.neurons), inputCount)
+    def createRandomWeights(self):
+        #self.weights = np.random.rand(len(self.neurons),len(self.inputs))
+        self.weights = np.ones((len(self.neurons),len(self.inputs)))/10
 
     def createRandomBias(self):
-        self.biases = np.random.rand(len(self.neurons))
+        #self.biases = np.random.rand(len(self.neurons))
+        self.biases = np.ones(len(self.neurons))/10
 
-    def getWeights(self):
-        return self.weights
+    def getLocalDerivatives(self):
+        derivatives = list()
+        for i in range(len(self.neurons)):
+            derivatives.append(self.neurons[i].getLocalDerivative())
+        return derivatives
 
-    def changeWeight(self,indexs,weight):
-        self.weights[indexs[0]][indexs[1]] = weight
+    def setLocalDerivatives(self,derivatives):
+        for i in range(len(self.neurons)):
+            self.neurons[i].setLocalDerivative(derivatives[i])
 
-    def getBiases(self):
-        return self.biases
-
-    def setBiases(self,biases):
-        self.biases = biases
-
-    def getNewWeights(self):
-        return self.newWeights
-
-    def setNewWeights(self,newWeights):
-        self.newWeights = newWeights
-
-    def changeNewWeight(self,indexs,weight):
-        self.newWeights[indexs[0]][indexs[1]] = weight
-
-    def getNewBiases(self):
-        return self.newBiases
-
-    def setNewBiases(self,newBiases):
-        self.newBiases = newBiases
-
-    def changeNewBias(self,index,bias):
-        self.newBiases[index] = bias
+    def getAFDerivatives(self):
+        derivatives = list()
+        for i, neuron in enumerate(self.getNeurons()):
+            derivatives.append(AF.ActivationFunction.runActivationFunctionDerivative(neuron.getActivationName(),self.getRawOutputs(), i))
+        return derivatives
 

@@ -1,6 +1,6 @@
 import numpy as np
 class ErrorFunctions:
-    function_names = ["MeansSquaredError"]
+    function_names = ["MeansSquaredError","CrossEntropyError"]
 
 
     @staticmethod
@@ -10,6 +10,14 @@ class ErrorFunctions:
     @staticmethod
     def mean_squared_error_derivative(y, t):
         return t - y
+
+    @staticmethod
+    def cross_entropy(y, t):
+        return -np.sum(t * np.log(y))
+
+    @staticmethod
+    def cross_entropy_derivative(y, t):
+        return -t / y
 
 
     @staticmethod
@@ -23,8 +31,16 @@ class ErrorFunctions:
                 errors.append(ErrorFunctions.mean_squared_error(y[i], t[i]))
             return errors
 
+        elif function_name == ErrorFunctions.function_names[1]:
+            errors = list()
+            for i in range(len(y)):
+                errors.append(ErrorFunctions.cross_entropy(y, t))
+            return errors
+
 
     @staticmethod
     def calculateDerivatives(function_name,y, t):
         if function_name == ErrorFunctions.function_names[0]:
             return ErrorFunctions.mean_squared_error_derivative(y, t)
+        elif function_name == ErrorFunctions.function_names[1]:
+            return ErrorFunctions.cross_entropy_derivative(y, t)

@@ -1,69 +1,81 @@
 import numpy as np
-
 import CreateModel as cm
+import matplotlib.pyplot as plt
 
-model = cm.Model(3136,10,"Softmax","MeansSquaredError")
-model.insertHiddenLayer(model.createLayer(128, "ReLU"))
+# from keras.datasets import mnist
+# from keras.utils.np_utils import to_categorical
+#
+# (X_train, y_train),(X_test, y_test) = mnist.load_data()
+#
+# y_cat_test = to_categorical(y_test,10)
+# y_cat_train = to_categorical(y_train,10)
+# X_train = X_train/X_train.max()
+# X_test = X_test/X_test.max()
+# X_train = X_train.reshape(60000, 28, 28, 1)
+# X_test = X_test.reshape(10000, 28, 28, 1)
+#
+# #flat X_train
+# X_train = X_train.reshape(60000, 28*28)
+# X_test = X_test.reshape(10000, 28*28)
 
-layer = model.createLayer(10, ["ReLU","ReLU","ReLU","Softmax","Softmax","Softmax","ReLU","ReLU","ReLU","ENES FIRAT"])
-model.changeOutputLayer(layer)
 
+# Create dataset------------------------------------------------------------------
+X = np.array([0])
+Y = np.array([1,0,0,0,0,0,0,0,0,0])
+for i in range(0,100):
+    X = np.vstack([X,np.array([0])])
+    Y = np.vstack([Y,np.array([1,0,0,0,0,0,0,0,0,0])])
+    X = np.vstack([X,np.array([0.1])])
+    Y = np.vstack([Y,np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0])])
+    X = np.vstack([X, np.array([0.2])])
+    Y = np.vstack([Y, np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0])])
+    X = np.vstack([X, np.array([0.3])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0])])
+    X = np.vstack([X, np.array([0.4])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0])])
+    X = np.vstack([X, np.array([0.5])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0])])
+    X = np.vstack([X, np.array([0.6])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0])])
+    X = np.vstack([X, np.array([0.7])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0])])
+    X = np.vstack([X, np.array([0.8])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0])])
+    X = np.vstack([X, np.array([0.9])])
+    Y = np.vstack([Y, np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])])
+#----------------------------------------------------------------------------------------
+
+
+# Create model---------------------------------------------------------------------------
+model = cm.Model(1,10,"Softmax")  #input_size, output_size, activation_function(for the output layer)
+model.insertHiddenLayer(model.createLayer(10, "Sigmoid"))   #neuron_count, activation_function
+# model.insertHiddenLayer(model.createLayer(64, "ReLU"))
+# layer = model.createLayer(10, "Softmax")
+# model.changeOutputLayer(layer)
 model.getModelInfo()
+#----------------------------------------------------------------------------------------
 
-# model.getOutputLayer().getNeuron(0).setWeights([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
 
-# 16-64 arasında modele sokulacak veri oluşturuluyor
-x_values=np.zeros((1, 3136))
-y_values=np.zeros((1, 10))
+# Train model----------------------------------------------------------------------------
+model.fit(X,Y,Epoch=5000,LearningRate=0.6,ErrorFunction="MeansSquaredError",interface=False,Debug=False)
 
-x_value=[0]*3136
-y_value= [1,0,0,0,0,0,0,0,0,0]
-x_values[0]=x_value
-y_values[0]=y_value
+# print(model.getModel()[0]) #print model weights
+# print(model.getModel()[1]) #print model biases
+#----------------------------------------------------------------------------------------
 
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
+# Test model-----------------------------------------------------------------------------
+# print(model.predict(X[0])) #print example prediction
+#----------------------------------------------------------------------------------------
 
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
 
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
 
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
+# Plot model-----------------------------------------------------------------------------
+data = model.getHistory()
+plt.plot(data, color='red') #plot the data
+plt.xticks(range(0,len(data)+1, 500)) #set the tick frequency on x-axis
 
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
-
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
-
-x_value1=[1]*3136
-y_value1=[0,1,0,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
-
-x_value1=[2]*3136
-y_value1=[0,0,1,0,0,0,0,0,0,0]
-x_values=np.append(np.array(x_values),[np.array(x_value1)],axis=0)
-y_values=np.append(np.array(y_values),[np.array(y_value1)],axis=0)
-
-# modele veri sokulup model çalıştırılıyor
-model.fit(x_values,y_values,10,0.9,Debug=False)
-
-#model eğitildikten sonra modelin ağırlıkları yazdırılıyor
-print(model.getModel())
-
+plt.ylabel('Error') #set the label for y axis
+plt.xlabel('Epoch') #set the label for x-axis
+plt.title("Accuracy") #set the title of the graph
+plt.show() #display the graph
+#----------------------------------------------------------------------------------------
