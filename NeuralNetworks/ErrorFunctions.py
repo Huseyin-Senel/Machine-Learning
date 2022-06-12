@@ -1,4 +1,8 @@
 import numpy as np
+import sklearn.metrics
+
+import math
+
 class ErrorFunctions:
     function_names = ["MeansSquaredError","CrossEntropyError"]
 
@@ -12,13 +16,16 @@ class ErrorFunctions:
         return t - y
 
     @staticmethod
-    def cross_entropy(y, t):
-        return -np.sum(t * np.log(y))
+    def cross_entropy(y, t,eps=1e-15):
+        #return sklearn.metrics.log_loss(y, t)
+        t=max(eps, min(1 - eps, t))
+        a=-y * math.log(t)
+        return a
 
     @staticmethod
-    def cross_entropy_derivative(y, t):
-        return -t / y
-
+    def cross_entropy_derivative(y, t,eps=1e-15):
+        #t=max(eps, min(1 - eps, t))
+        return t-y
 
     @staticmethod
     def calculateErrors(function_name,y, t):
@@ -34,8 +41,9 @@ class ErrorFunctions:
         elif function_name == ErrorFunctions.function_names[1]:
             errors = list()
             for i in range(len(y)):
-                errors.append(ErrorFunctions.cross_entropy(y, t))
+                errors.append(ErrorFunctions.cross_entropy(y[i], t[i]))
             return errors
+
 
 
     @staticmethod

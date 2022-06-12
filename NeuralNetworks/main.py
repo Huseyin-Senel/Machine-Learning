@@ -50,6 +50,7 @@ for i in range(0,100):
 model = cm.Model(1,10,"Softmax")  #input_size, output_size, activation_function(for the output layer)
 model.insertHiddenLayer(model.createLayer(10, "Sigmoid"))   #neuron_count, activation_function
 # model.insertHiddenLayer(model.createLayer(64, "ReLU"))
+# model.insertHiddenLayer(model.createLayer(5, "ReLU","ReLU","ReLU","Softmax","Sigmoid"))
 # layer = model.createLayer(10, "Softmax")
 # model.changeOutputLayer(layer)
 model.getModelInfo()
@@ -57,7 +58,7 @@ model.getModelInfo()
 
 
 # Train model----------------------------------------------------------------------------
-model.fit(X,Y,Epoch=5000,LearningRate=0.6,ErrorFunction="MeansSquaredError",interface=False,Debug=False)
+model.fit(X,Y,Epoch=5000,LearningRate=0.6,momentum=0.3,ErrorFunction="MeansSquaredError",interface=False,Debug=False)
 
 # print(model.getModel()[0]) #print model weights
 # print(model.getModel()[1]) #print model biases
@@ -71,6 +72,14 @@ model.fit(X,Y,Epoch=5000,LearningRate=0.6,ErrorFunction="MeansSquaredError",inte
 
 # Plot model-----------------------------------------------------------------------------
 data = model.getHistory()
+
+arrayData = np.array(data)
+
+file = open("sample.txt", "a")
+content = str(arrayData)
+file.write(content+"\n\n")
+file.close()
+
 plt.plot(data, color='red') #plot the data
 plt.xticks(range(0,len(data)+1, 500)) #set the tick frequency on x-axis
 

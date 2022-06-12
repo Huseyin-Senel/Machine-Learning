@@ -46,7 +46,7 @@ class Layer:
         if not (len(self.inputs)==self.deltaWeights.shape[1]) or not (len(self.neurons)==self.deltaWeights.shape[0]):
             self.deltaWeights = np.zeros((len(self.neurons),len(self.inputs)))
             print("bbbb")
-        if not (len(self.inputs)==len(self.deltaBiases)):
+        if not(len(self.neurons) == len(self.deltaBiases)):
             self.deltaBiases = np.zeros(len(self.neurons))
             print("cccc")
 

@@ -4,6 +4,7 @@ import neuron as NU
 import LayerClass as LC
 import ErrorFunctions as EF
 import ActivationFunction as AF
+import Optimizers as OP
 class Model:
 
     def __init__(self,inputCount,outputCount,activationFunction):
@@ -19,31 +20,34 @@ class Model:
 
         self.insertHiddenLayer(self.createLayer(outputCount, activationFunction))
 
-    def fit(self,x_train,y_train,Epoch,LearningRate,ErrorFunction,interface,Debug=False):
+    def fit(self,x_train,y_train,Epoch,LearningRate,momentum,ErrorFunction,interface,Debug=False):
         self.ErrorFunction = ErrorFunction
+        # optimizer = OP.AdamOptimizer(LearningRate)
         for epoch in range(Epoch):
             if not(interface):
                 error = 0
                 for i, x in enumerate(x_train):
                     self.setInputs(x)
                     self.setExpectedOutputs(y_train[i])
-                    self.predictModel(LearningRate,Debug)
+                    self.predictModel(LearningRate,momentum,Debug)
                     error += self.getError()[0]
                 print("Epoch"+str(epoch+1)+" Error: " + str(error / len(x_train)))
                 self.ErrorHistory.append(error / len(x_train))
+                # optimizer.updateT()
             else:
                 with alive_bar(len(x_train),title="Epoch: "+str(epoch+1),force_tty=True) as bar:
                     error = 0
                     for i, x in enumerate(x_train):
                         self.setInputs(x)
                         self.setExpectedOutputs(y_train[i])
-                        self.predictModel(LearningRate, Debug)
+                        self.predictModel(LearningRate,momentum,Debug)
                         error += self.getError()[0]
                         bar()
                 print("Error: " + str(error / len(x_train)))
                 self.ErrorHistory.append(error / len(x_train))
+                # optimizer.updateT()
 
-    def predictModel(self,learningRate,Debug):
+    def predictModel(self,learningRate,momentum,Debug):
         for idx,layer in enumerate(self.layers):
             if idx==0:
                 layer.setInputs(self.inputs)
@@ -58,10 +62,10 @@ class Model:
         if (Debug):print("Expected Outputs:",self.ExpectedOutputs)
         if (Debug): print("Total Error:", self.TotalError)
         if (Debug): print("-------------------------------------------------------------------------------\n")
-        self.runBackPropagation(learningRate,Debug)
+        self.runBackPropagation(learningRate,momentum,Debug)
 
 
-    def runBackPropagation(self,learningRate,Debug=False):
+    def runBackPropagation(self,learningRate,momentum,Debug=False):
         if Debug: print
         for layer in reversed(self.layers):
             if (Debug): print("\n-------------------- Running Backpropagation Layer" + str(self.layers.index(layer)+1) + "-----------------------------")
@@ -79,11 +83,16 @@ class Model:
                     neuron.setLocalDerivative(EF_Derivative * AF_Derivative)
 
                     for idx,x in enumerate(layer.getInputs()):
-                        deltaWeight = ((-learningRate) * EF_Derivative * AF_Derivative * x)
-                        if (Debug): print("New Weight:",layer.getWeights()[i][idx]+deltaWeight)
-                        layer.changeNewWeight([i,idx],layer.getWeights()[i][idx] + deltaWeight)
-                    deltaBias = ((-learningRate) * EF_Derivative * AF_Derivative)
-                    layer.changeNewBias(i,layer.getBiases()[i] + deltaBias)
+                        deltaWeight = (learningRate * EF_Derivative * AF_Derivative * x) + (momentum * layer.getDeltaWeights()[i][idx])
+                        if (Debug): print("New Weight:",layer.getWeights()[i][idx]-deltaWeight)
+                        layer.changeNewWeight([i,idx],layer.getWeights()[i][idx] - deltaWeight)
+                        layer.changeDeltaWeight([i, idx], deltaWeight)
+                        # layer.changeNewWeight([i, idx], optimizer.update(EF_Derivative * AF_Derivative * x,layer.getWeights()[i][idx]))
+
+                    deltaBias = (learningRate * EF_Derivative * AF_Derivative) + (momentum * layer.getDeltaBiases()[i])
+                    layer.changeNewBias(i,layer.getBiases()[i] - deltaBias)
+                    layer.changeDeltaBias(i,deltaBias)
+                    # layer.changeNewBias(i, optimizer.update(EF_Derivative * AF_Derivative,layer.getBiases()[i]))
             else:
                 weights = self.layers[self.layers.index(layer) + 1].getWeights()
                 if Debug: print("Front weights:\n",weights)
@@ -109,12 +118,14 @@ class Model:
                 if Debug:print("inputs*(ThisLocalDerivatives.T):\n",arr2)
 
                 if Debug: print("Old Weights:\n", layer.getWeights())
-                deltaWeights = (arr2*(-learningRate))
-                layer.setNewWeights(layer.getWeights() + deltaWeights)
+                deltaWeights = (arr2*learningRate) + (momentum * layer.getDeltaWeights())
+                layer.setNewWeights(layer.getWeights() - deltaWeights)
+                layer.setDeltaWeights(deltaWeights)
                 if Debug: print("New Weights:\n",layer.getNewWeights())
 
-                deltaBiases =(thisAFLocalDerivates*(-learningRate))
-                layer.setNewBiases(layer.getBiases() + deltaBiases)
+                deltaBiases = (thisAFLocalDerivates*learningRate) + (momentum * np.array(layer.getDeltaBiases()))
+                layer.setNewBiases(layer.getBiases() - deltaBiases)
+                layer.setDeltaBiases(deltaBiases.flatten())
                 if Debug: print("-----------------------------------------------------------------------------------------------")
 
 
